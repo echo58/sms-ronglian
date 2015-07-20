@@ -2,10 +2,11 @@
 
 namespace Huying\Sms\RongLian;
 
-use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\GuzzleException;
 use Huying\Sms\AbstractProvider;
 use Huying\Sms\Message;
 use Huying\Sms\ProviderException;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * 容联短信平台接口实现
@@ -162,12 +163,16 @@ class Provider extends AbstractProvider
     /**
      * 处理短信接口的返回结果
      *
-     * @param Response $response
+     * @param ResponseInterface|GuzzleException $response
      * @return array
      * @throws ProviderException
+     * @throws GuzzleException
      */
-    protected function handleResponse(Response $response)
+    protected function handleResponse($response)
     {
+        if ($response instanceof GuzzleException) {
+            throw $response;
+        }
         $parsedResponse = self::parseJson($response->getBody());
         if ($parsedResponse['statusCode'] != '000000') {
             throw new ProviderException($parsedResponse['statusMsg'], $parsedResponse['statusCode'], $parsedResponse);
